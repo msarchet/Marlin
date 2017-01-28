@@ -149,7 +149,9 @@
 #elif MB(MEGACONTROLLER)
   #include "pins_MEGACONTROLLER.h"    // ATmega2560
 #elif MB(SCOOVO_X9H)
-  #include "pins_SCOOVO_X9H.h"        // ATmega2560
+  #include "pins_SCOOVO_X9H.h"
+#elif MB(PICA) || MB(PICA_REVB)
+  #include "pins_PICA.h"
 #elif MB(GT2560_REV_A)
   #include "pins_GT2560_REV_A.h"      // ATmega1280, ATmega2560
 #elif MB(GT2560_REV_A_PLUS)
