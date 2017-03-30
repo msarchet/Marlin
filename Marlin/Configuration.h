@@ -837,13 +837,18 @@
 #define Z_HOME_DIR -1
 
 // @section machine
+#if ENABLED(Z_RACK_PINION)
+  #define Z_RACK_OFFSET 10
+#else
+  #define Z_RACK_OFFSET 0
+#endif
 
 // The size of the print bed
 #define X_BED_SIZE 200
 #define Y_BED_SIZE 200
 
-// Travel limits (mm) after homing, corresponding to endstop positions.
-#define X_MIN_POS 0
+// Travel limits after homing (units are in mm)
+#define X_MIN_POS 0 + Z_RACK_OFFSET
 #define Y_MIN_POS 0
 #define Z_MIN_POS 0
 #define X_MAX_POS X_BED_SIZE
@@ -854,10 +859,6 @@
 #define MIN_SOFTWARE_ENDSTOPS
 // If enabled, axes won't move above MAX_POS in response to movement commands.
 #define MAX_SOFTWARE_ENDSTOPS
-
-#if ENABLED(Z_RACK_PINION)
-  #define X_MIN_POS 10
-#endif
 
 /**
  * Filament Runout Sensor
