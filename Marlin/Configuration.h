@@ -80,9 +80,11 @@
 #define WILSON_DEFAULTS
 
 #if ENABLED(WILSON_DEFAULTS)
-  #define AUTO_BED_LEVELING_3POINT
-  //#define AUTO_BED_LEVELING_LINEAR
-  //#define AUTO_BED_LEVELING_BILINEAR
+  //#define AUTO_BED_LEVELING_3POINT    // Probe 3 points. The result is a single tilted plane. Best for a flat bed.
+  #define AUTO_BED_LEVELING_LINEAR    // Probe several points in a grid. The result is a single tilted plane. Best for a flat bed.
+  //#define AUTO_BED_LEVELING_BILINEAR  // Probe several points in a grid. The result is a mesh, best for large or uneven beds.
+  //#define MESH_BED_LEVELING           // A simplified method of compensating for an uneven bed.
+  //#define AUTO_BED_LEVELING_UBL       // A comprehensive bed leveling system that combines features and benefits from previous methods.
   #define NEVER_DISABLE_Z
   #define MOVE_MENU_PRECISE_MOVE_ITEMS
   #define EEPROM_SETTINGS
@@ -944,12 +946,29 @@
   #define GRID_MAX_POINTS_X 3
   #define GRID_MAX_POINTS_Y GRID_MAX_POINTS_X
 
-  // Set the boundaries for probing (where the probe can reach).
-  #define LEFT_PROBE_BED_POSITION 15
-  #define RIGHT_PROBE_BED_POSITION (X_MAX_POS-30)
-  #define FRONT_PROBE_BED_POSITION (20+Y_PROBE_OFFSET_FROM_EXTRUDER)
-  #define BACK_PROBE_BED_POSITION (Y_MAX_POS-30)
-
+  // Set the boundaries for probing (where the probe can reach). Absolute value of offset, abs(X_PROBE_OFFSET_FROM_EXTRUDER) > 15.
+  #if (X_PROBE_OFFSET_FROM_EXTRUDER > 0 && X_PROBE_OFFSET_FROM_EXTRUDER < 15) || (X_PROBE_OFFSET_FROM_EXTRUDER < 0 && X_PROBE_OFFSET_FROM_EXTRUDER > -15)
+    #define LEFT_PROBE_BED_POSITION 15
+    #define RIGHT_PROBE_BED_POSITION (X_MAX_POS + X_PROBE_OFFSET_FROM_EXTRUDER - Z_RACK_OFFSET)
+  #elif X_PROBE_OFFSET_FROM_EXTRUDER < 0                                 // A large negative offset.
+    #define LEFT_PROBE_BED_POSITION 15
+    #define RIGHT_PROBE_BED_POSITION X_MAX_POS
+  #else                                                                  // A large positive offset.
+    #define LEFT_PROBE_BED_POSITION X_PROBE_OFFSET_FROM_EXTRUDER
+    #define RIGHT_PROBE_BED_POSITION (X_MAX_POS - Z_RACK_OFFSET)
+  #endif
+  // Now the Ys. Absolute value of offset, abs(Y_PROBE_OFFSET_FROM_EXTRUDER) > 20.
+  #if (Y_PROBE_OFFSET_FROM_EXTRUDER > 0 && Y_PROBE_OFFSET_FROM_EXTRUDER < 20) || (Y_PROBE_OFFSET_FROM_EXTRUDER < 0 && Y_PROBE_OFFSET_FROM_EXTRUDER > -20)
+    #define FRONT_PROBE_BED_POSITION 20
+    #define BACK_PROBE_BED_POSITION (Y_MAX_POS - 20)
+  #elif Y_PROBE_OFFSET_FROM_EXTRUDER < 0                                 // A large negative offset.
+    #define FRONT_PROBE_BED_POSITION 20
+    #define BACK_PROBE_BED_POSITION Y_MAX_POS
+  #else                                                                  // A large positive offset.
+    #define FRONT_PROBE_BED_POSITION Y_PROBE_OFFSET_FROM_EXTRUDER
+    #define BACK_PROBE_BED_POSITION Y_MAX_POS
+  #endif
+  
   // The Z probe minimum outer margin (to validate G29 parameters).
   #define MIN_PROBE_EDGE 10
 
@@ -978,12 +997,34 @@
 
   // 3 arbitrary points to probe.
   // A simple cross-product is used to estimate the plane of the bed.
-  #define ABL_PROBE_PT_1_X 15
-  #define ABL_PROBE_PT_1_Y (Y_MAX_POS - 20)
-  #define ABL_PROBE_PT_2_X 15
-  #define ABL_PROBE_PT_2_Y 20
-  #define ABL_PROBE_PT_3_X (X_MAX_POS - 30)
-  #define ABL_PROBE_PT_3_Y 20
+  // Checking the offset, calculate the X and Y positions for each point. Absolute value of offset, abs(X_PROBE_OFFSET_FROM_EXTRUDER) > 15.
+  #if (X_PROBE_OFFSET_FROM_EXTRUDER > 0 && X_PROBE_OFFSET_FROM_EXTRUDER < 15) || (X_PROBE_OFFSET_FROM_EXTRUDER < 0 && X_PROBE_OFFSET_FROM_EXTRUDER > -15)
+    #define ABL_PROBE_PT_1_X 15
+    #define ABL_PROBE_PT_2_X 15
+    #define ABL_PROBE_PT_3_X (X_MAX_POS + X_PROBE_OFFSET_FROM_EXTRUDER - Z_RACK_OFFSET)
+  #elif X_PROBE_OFFSET_FROM_EXTRUDER < 0                         // A large negative offset.
+    #define ABL_PROBE_PT_1_X 15
+    #define ABL_PROBE_PT_2_X 15
+    #define ABL_PROBE_PT_3_X X_MAX_POS
+  #else                                                          // A large positive offset.
+    #define ABL_PROBE_PT_1_X X_PROBE_OFFSET_FROM_EXTRUDER
+    #define ABL_PROBE_PT_2_X X_PROBE_OFFSET_FROM_EXTRUDER
+    #define ABL_PROBE_PT_3_X (X_MAX_POS - Z_RACK_OFFSET)
+  #endif
+  // Now the Ys. Absolute value of offset, abs(Y_PROBE_OFFSET_FROM_EXTRUDER) > 20.
+  #if (Y_PROBE_OFFSET_FROM_EXTRUDER > 0 && Y_PROBE_OFFSET_FROM_EXTRUDER < 20) || (Y_PROBE_OFFSET_FROM_EXTRUDER < 0 && Y_PROBE_OFFSET_FROM_EXTRUDER > -20)
+    #define ABL_PROBE_PT_1_Y 20
+    #define ABL_PROBE_PT_2_Y (Y_MAX_POS - 20)
+    #define ABL_PROBE_PT_3_Y 20
+  #elif Y_PROBE_OFFSET_FROM_EXTRUDER < 0                         // A large negative offset.
+    #define ABL_PROBE_PT_1_Y 20
+    #define ABL_PROBE_PT_2_Y Y_MAX_POS
+    #define ABL_PROBE_PT_3_Y 20
+  #else                                                          // A large positive offset.
+    #define ABL_PROBE_PT_1_Y Y_PROBE_OFFSET_FROM_EXTRUDER
+    #define ABL_PROBE_PT_2_Y Y_MAX_POS
+    #define ABL_PROBE_PT_3_Y Y_PROBE_OFFSET_FROM_EXTRUDER
+  #endif
 
 #elif ENABLED(AUTO_BED_LEVELING_UBL)
 
