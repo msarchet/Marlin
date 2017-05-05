@@ -578,7 +578,10 @@ static_assert(1 >= 0
   #if ENABLED(Z_PROBE_SLED)
     + 1
   #endif
-  , "Please enable only one probe option: PROBE_MANUALLY, FIX_MOUNTED_PROBE, BLTOUCH, SOLENOID_PROBE, Z_PROBE_ALLEN_KEY, Z_PROBE_SLED, or Z Servo."
+  #if ENABLED(Z_RACK_PINION)
+    + 1
+  #endif
+  , "Please enable only one probe: PROBE_MANUALLY, FIX_MOUNTED_PROBE, Z Servo, BLTOUCH, Z_PROBE_ALLEN_KEY, Z_PROBE_SLED, Z_RACK_PINION or SOLENOID_PROBE."
 );
 
 #if PROBE_SELECTED
