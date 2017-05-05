@@ -71,6 +71,40 @@
 
 // @section info
 
+// Z probes:
+//#define FIX_MOUNTED_PROBE
+//#define BLTOUCH
+#define Z_RACK_PINION
+//#define MJRICE_SERVO
+
+#define WILSON_DEFAULTS
+
+#if ENABLED(WILSON_DEFAULTS)
+  #define AUTO_BED_LEVELING_3POINT
+  //#define AUTO_BED_LEVELING_LINEAR
+  //#define AUTO_BED_LEVELING_BILINEAR
+  #define NEVER_DISABLE_Z
+  #define MOVE_MENU_PRECISE_MOVE_ITEMS
+  #define EEPROM_SETTINGS
+  #define SDSUPPORT
+  #define REPRAP_DISCOUNT_SMART_CONTROLLER
+
+  #if ENABLED(Z_RACK_PINION)
+    #define Z_PROBE_OFFSET -11 // Always negative (below the nozzle).
+  #elif ENABLED(MJRICE_SERVO)
+    #define NUM_SERVOS 3
+	#define Z_ENDSTOP_SERVO_NR 2  // Servo index starts with 0 for M280 command
+    #define Z_SERVO_ANGLES {0,90} // Z Servo Deploy and Stow angles
+    // sometimes the weight of the servo arm and the shaking of he extruder causes the servo to slowly descend during printing until it 
+    // interferes with the print. There are two things I could do.  The first one (not using) just keeps the servo attached all the time.
+    //#define DONT_DETACH_SERVOS  // Dont use this unless you're desperate. If you use this to keep the servos rigidly in place, make sure you are powering the servos from an adequate source (not the arduino 5V regulator)
+    // But this one seems to work nicely, it will just periodically put the servo back to where it is supposed to be:
+    #define PERIODICALLY_REFRESH_SERVO
+    #define SERVO_REFRESH_INTERVAL 10000 // ms
+    #define Z_PROBE_OFFSET -6 // Always negative (below the nozzle).
+  #endif
+#endif
+
 // User-specified version info of this build to display in [Pronterface, etc] terminal window during
 // startup. Implementation of an idea by Prof Braino to inform user that any changes made to this
 // build by the user have been successfully uploaded into firmware.
@@ -118,8 +152,9 @@
 
 // The following define selects which electronics board you have.
 // Please choose the name from boards.h that matches your setup
-#ifndef MOTHERBOARD  
-  #define MOTHERBOARD BOARD_RAMPS_14_EFB
+#ifndef MOTHERBOARD
+  //#define MOTHERBOARD BOARD_PICA_REVB	// For the older PICA (board revision is printed on the silkscreen of the PCB).
+  #define MOTHERBOARD BOARD_PICA
 #endif
 
 // Optional custom name for your RepStrap or other custom machine
@@ -283,7 +318,7 @@
  *
  * :{ '0': "Not used", '1':"100k / 4.7k - EPCOS", '2':"200k / 4.7k - ATC Semitec 204GT-2", '3':"Mendel-parts / 4.7k", '4':"10k !! do not use for a hotend. Bad resolution at high temp. !!", '5':"100K / 4.7k - ATC Semitec 104GT-2 (Used in ParCan & J-Head)", '6':"100k / 4.7k EPCOS - Not as accurate as Table 1", '7':"100k / 4.7k Honeywell 135-104LAG-J01", '8':"100k / 4.7k 0603 SMD Vishay NTCS0603E3104FXT", '9':"100k / 4.7k GE Sensing AL03006-58.2K-97-G1", '10':"100k / 4.7k RS 198-961", '11':"100k / 4.7k beta 3950 1%", '12':"100k / 4.7k 0603 SMD Vishay NTCS0603E3104FXT (calibrated for Makibox hot bed)", '13':"100k Hisens 3950  1% up to 300°C for hotend 'Simple ONE ' & hotend 'All In ONE'", '20':"PT100 (Ultimainboard V2.x)", '51':"100k / 1k - EPCOS", '52':"200k / 1k - ATC Semitec 204GT-2", '55':"100k / 1k - ATC Semitec 104GT-2 (Used in ParCan & J-Head)", '60':"100k Maker's Tool Works Kapton Bed Thermistor beta=3950", '66':"Dyze Design 4.7M High Temperature thermistor", '70':"the 100K thermistor found in the bq Hephestos 2", '71':"100k / 4.7k Honeywell 135-104LAF-J01", '147':"Pt100 / 4.7k", '1047':"Pt1000 / 4.7k", '110':"Pt100 / 1k (non-standard)", '1010':"Pt1000 / 1k (non standard)", '-3':"Thermocouple + MAX31855 (only for sensor 0)", '-2':"Thermocouple + MAX6675 (only for sensor 0)", '-1':"Thermocouple + AD595",'998':"Dummy 1", '999':"Dummy 2" }
  */
-#define TEMP_SENSOR_0 1
+#define TEMP_SENSOR_0 5
 #define TEMP_SENSOR_1 0
 #define TEMP_SENSOR_2 0
 #define TEMP_SENSOR_3 0
@@ -322,12 +357,12 @@
 // When temperature exceeds max temp, your heater will be switched off.
 // This feature exists to protect your hotend from overheating accidentally, but *NOT* from thermistor short/failure!
 // You should use MINTEMP for thermistor short/failure protection.
-#define HEATER_0_MAXTEMP 275
+#define HEATER_0_MAXTEMP 255
 #define HEATER_1_MAXTEMP 275
 #define HEATER_2_MAXTEMP 275
 #define HEATER_3_MAXTEMP 275
 #define HEATER_4_MAXTEMP 275
-#define BED_MAXTEMP 150
+#define BED_MAXTEMP 140
 
 //===========================================================================
 //============================= PID Settings ================================
@@ -521,6 +556,14 @@
 //#define DISTINCT_E_FACTORS
 
 /**
+#define MK7_DEFAULT_STEPS 105
+#define MK8_DEFAULT_STEPS 150
+ 
+/** 
+ * GT2 belts with 1/16th stepper driver are typically 80 steps/mm (20T pulley)
+ * MK7 drive gear with 1/16th stepper driver is about 105 steps/mm
+ * 8mm leadscrews with 1/16th stepper driver is normally 400 steps/mm
+ * 
  * Default Axis Steps Per Unit (steps/mm)
  * Override with M92
  *                                      X, Y, Z, E0 [, E1[, E2[, E3[, E4]]]]
@@ -532,7 +575,16 @@
  * Override with M203
  *                                      X, Y, Z, E0 [, E1[, E2[, E3[, E4]]]]
  */
-#define DEFAULT_MAX_FEEDRATE          { 300, 300, 5, 25 }
+#if ENABLED(WILSON_TYPE)
+  #define DEFAULT_AXIS_STEPS_PER_UNIT   { 80, 80, 4000, MK7_DEFAULT_STEPS }
+  #define DEFAULT_MAX_FEEDRATE          { 100, 100, 3, 25 }
+#elif ENABLED(WILSON_II_TYPE)
+  #define DEFAULT_AXIS_STEPS_PER_UNIT   { 80, 80, 400, 107 }
+  #define DEFAULT_MAX_FEEDRATE          { 120, 120, 6, 25 }
+#else
+  #define DEFAULT_AXIS_STEPS_PER_UNIT   { 80, 80, 4000, 500 }
+  #define DEFAULT_MAX_FEEDRATE          { 300, 300, 5, 25 }
+#endif
 
 /**
  * Default Max Acceleration (change/s) change = mm/s
@@ -618,6 +670,25 @@
  */
 //#define PROBE_MANUALLY
 
+// Z Probe to nozzle (X,Y) offset, relative to (0, 0). 
+// X and Y offsets must be integers. 
+// 
+// In the following example the X and Y offsets are both positive: 
+// #define X_PROBE_OFFSET_FROM_EXTRUDER 10 
+// #define Y_PROBE_OFFSET_FROM_EXTRUDER 10 
+// 
+//    +-- BACK ---+ 
+//    |           | 
+//  L |    (+) P  | R <-- probe (20,20) 
+//  E |           | I 
+//  F | (-) N (+) | G <-- nozzle (10,10) 
+//  T |           | H 
+//    |    (-)    | T 
+//    |           | 
+//    O-- FRONT --+ 
+//  (0,0) 
+// 
+
 /**
  * A Fix-Mounted Probe either doesn't deploy or needs manual deployment.
  *   (e.g., an inductive probe or a nozzle-based probe-switch.)
@@ -663,45 +734,19 @@
 // Enable if you have the Rack & Pinion style bed probe (i.e. Wilson II)
 //#define Z_RACK_PINION
 
-#ifdef Z_RACK_PINION
-#define Z_MIN_PROBE_USES_Z_MIN_ENDSTOP_PIN
-#define Z_CLEARANCE_DEPLOY_PROBE 10
-#define X_PROBE_OFFSET_FROM_EXTRUDER 0     // Probe on: -left  +right
-#define Y_PROBE_OFFSET_FROM_EXTRUDER 45     // Probe on: -front +behind
-#define Z_PROBE_OFFSET_FROM_EXTRUDER -11  // -below (always!) 
-#define Z_SAFE_HOMING // home with probe in middle of bed not on the edge
-#endif
-
-// Z Probe to nozzle (X,Y) offset, relative to (0, 0).
-// X and Y offsets must be integers.
-//
-// In the following example the X and Y offsets are both positive:
-// #define X_PROBE_OFFSET_FROM_EXTRUDER 10
-// #define Y_PROBE_OFFSET_FROM_EXTRUDER 10
-//
-//    +-- BACK ---+
-//    |           |
-//  L |    (+) P  | R <-- probe (20,20)
-//  E |           | I
-//  F | (-) N (+) | G <-- nozzle (10,10)
-//  T |           | H
-//    |    (-)    | T
-//    |           |
-//    O-- FRONT --+
-//  (0,0)
-#if ENABLED(MJRICE_BEDLEVELING_RACK)
-  #define X_PROBE_OFFSET_FROM_EXTRUDER 0      // X offset: -left  +right  [of the nozzle]
-  #define Y_PROBE_OFFSET_FROM_EXTRUDER 45     // Y offset: -front +behind [the nozzle]
-  #define Z_PROBE_OFFSET_FROM_EXTRUDER -12.15 // Z offset: -below +above  [the nozzle]
-#elif ENABLED(MJRICE_SERVO)
-  #define X_PROBE_OFFSET_FROM_EXTRUDER -54    // Probe on: -left  +right
-  #define Y_PROBE_OFFSET_FROM_EXTRUDER -7     // Probe on: -front +behind
-  #define Z_PROBE_OFFSET_FROM_EXTRUDER -6     // -below (always!) // mrice: for wilson ts [ jhead use -18 for e3dlite use -7.7 ]
-#else
-  #define X_PROBE_OFFSET_FROM_EXTRUDER 10     // X offset: -left  +right  [of the nozzle]
-  #define Y_PROBE_OFFSET_FROM_EXTRUDER 10     // Y offset: -front +behind [the nozzle]
-  #define Z_PROBE_OFFSET_FROM_EXTRUDER 0      // Z offset: -below +above  [the nozzle]	
-#endif
+#if ENABLED(Z_RACK_PINION)
+  #define X_PROBE_OFFSET_FROM_EXTRUDER -7             // Probe on: -left  +right 
+  #define Y_PROBE_OFFSET_FROM_EXTRUDER 45             // Probe on: -front +behind 
+  #define Z_PROBE_OFFSET_FROM_EXTRUDER Z_PROBE_OFFSET // -below (always!)  
+  #define Z_SAFE_HOMING                               // home with probe in middle of bed not on the edge 
+#elif ENABLED(MJRICE_SERVO) 
+  #define X_PROBE_OFFSET_FROM_EXTRUDER -54            // Probe on: -left  +right 
+  #define Y_PROBE_OFFSET_FROM_EXTRUDER -7             // Probe on: -front +behind 
+  #define Z_PROBE_OFFSET_FROM_EXTRUDER Z_PROBE_OFFSET // -below (always!) // mrice: for wilson ts [ jhead use -18 for e3dlite use -7.7 ] 
+#else 
+  #define X_PROBE_OFFSET_FROM_EXTRUDER 10             // X offset: -left  +right  [of the nozzle] 
+  #define Y_PROBE_OFFSET_FROM_EXTRUDER 10             // Y offset: -front +behind [the nozzle] 
+  #define Z_PROBE_OFFSET_FROM_EXTRUDER 0              // Z offset: -below +above  [the nozzle] 
 
 // X and Y axis travel speed (mm/m) between probes
 #define XY_PROBE_SPEED 8000
@@ -810,8 +855,8 @@
 // If enabled, axes won't move above MAX_POS in response to movement commands.
 #define MAX_SOFTWARE_ENDSTOPS
 
-#ifdef Z_RACK_PINION
-#define X_MIN_POS 10
+#if ENABLED(Z_RACK_PINION)
+  #define X_MIN_POS 10
 #endif
 
 /**
@@ -933,10 +978,10 @@
   // 3 arbitrary points to probe.
   // A simple cross-product is used to estimate the plane of the bed.
   #define ABL_PROBE_PT_1_X 15
-  #define ABL_PROBE_PT_1_Y 180
+  #define ABL_PROBE_PT_1_Y (Y_MAX_POS - 20)
   #define ABL_PROBE_PT_2_X 15
   #define ABL_PROBE_PT_2_Y 20
-  #define ABL_PROBE_PT_3_X 170
+  #define ABL_PROBE_PT_3_X (X_MAX_POS - 30)
   #define ABL_PROBE_PT_3_Y 20
 
 #elif ENABLED(AUTO_BED_LEVELING_UBL)
@@ -1072,11 +1117,11 @@
 
 // Preheat Constants
 #define PREHEAT_1_TEMP_HOTEND 180
-#define PREHEAT_1_TEMP_BED     70
+#define PREHEAT_1_TEMP_BED     55
 #define PREHEAT_1_FAN_SPEED     0 // Value from 0 to 255
 
-#define PREHEAT_2_TEMP_HOTEND 240
-#define PREHEAT_2_TEMP_BED    110
+#define PREHEAT_2_TEMP_HOTEND 210
+#define PREHEAT_2_TEMP_BED    100
 #define PREHEAT_2_FAN_SPEED     0 // Value from 0 to 255
 
 /**
