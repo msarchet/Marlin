@@ -76,17 +76,23 @@
 //#define BLTOUCH
 #define Z_RACK_PINION
 //#define MJRICE_SERVO
+//#define SOLENOID_PROBE
 
 #define WILSON_DEFAULTS
 
 #if ENABLED(WILSON_DEFAULTS)
+  //#define PROBE_MANUALLY              // The "Manual Probe" provides a means to do "Auto" Bed Leveling without a probe. 
   //#define AUTO_BED_LEVELING_3POINT    // Probe 3 points. The result is a single tilted plane. Best for a flat bed.
   #define AUTO_BED_LEVELING_LINEAR    // Probe several points in a grid. The result is a single tilted plane. Best for a flat bed.
   //#define AUTO_BED_LEVELING_BILINEAR  // Probe several points in a grid. The result is a mesh, best for large or uneven beds.
+  #if ENABLED(AUTO_BED_LEVELING_BILINEAR) 
+    #define ABL_BILINEAR_SUBDIVISION  // Synthesizes intermediate points to produce a more detailed mesh. 
+  #endif
+  //#define AUTO_BED_LEVELING_UBL       // A comprehensive bed leveling system that combines features and benefits of other methods.
   //#define MESH_BED_LEVELING           // A simplified method of compensating for an uneven bed.
-  //#define AUTO_BED_LEVELING_UBL       // A comprehensive bed leveling system that combines features and benefits from previous methods.
-  #define NEVER_DISABLE_Z
-  #define MOVE_MENU_PRECISE_MOVE_ITEMS
+  #if ENABLED(MESH_BED_LEVELING) || ENABLED(PROBE_MANUALLY)
+    //#define LCD_BED_LEVELING          // Use the LCD controller for bed leveling.
+  #endif
   #define EEPROM_SETTINGS
   #define SDSUPPORT
   #define REPRAP_DISCOUNT_SMART_CONTROLLER
@@ -1034,17 +1040,39 @@
 
   #define UBL_MESH_INSET 1          // Mesh inset margin on print area
   #define GRID_MAX_POINTS_X 10      // Don't use more than 15 points per axis, implementation limited.
-  #define GRID_MAX_POINTS_Y GRID_MAX_POINTS_X
-
-  #define UBL_PROBE_PT_1_X 39       // Probing points for 3-Point leveling of the mesh
-  #define UBL_PROBE_PT_1_Y 180
-  #define UBL_PROBE_PT_2_X 39
-  #define UBL_PROBE_PT_2_Y 20
-  #define UBL_PROBE_PT_3_X 180
-  #define UBL_PROBE_PT_3_Y 20
-
-  //#define UBL_G26_MESH_VALIDATION // Enable G26 mesh validation
+  #define GRID_MAX_POINTS_Y GRID_MAX_POINTS_X  
+  #define UBL_G26_MESH_VALIDATION   // Enable G26 mesh validation
   #define UBL_MESH_EDIT_MOVES_Z     // Sophisticated users prefer no movement of nozzle
+
+  // These set the probe locations for when UBL does a 3-Point leveling of the mesh. 
+  // Checking the offset, calculate the X and Y positions for each point. Absolute value of offset, abs(X_PROBE_OFFSET_FROM_EXTRUDER) > 15. 
+  #if (X_PROBE_OFFSET_FROM_EXTRUDER > 0 && X_PROBE_OFFSET_FROM_EXTRUDER < 15) || (X_PROBE_OFFSET_FROM_EXTRUDER < 0 && X_PROBE_OFFSET_FROM_EXTRUDER > -15) 
+    #define UBL_PROBE_PT_1_X 15 
+    #define UBL_PROBE_PT_2_X 15 
+    #define UBL_PROBE_PT_3_X (X_MAX_POS + X_PROBE_OFFSET_FROM_EXTRUDER - Z_RACK_OFFSET) 
+  #elif X_PROBE_OFFSET_FROM_EXTRUDER < 0                         // A large negative offset. 
+    #define UBL_PROBE_PT_1_X 15 
+    #define UBL_PROBE_PT_2_X 15 
+    #define UBL_PROBE_PT_3_X X_MAX_POS 
+  #else                                                          // A large positive offset. 
+    #define UBL_PROBE_PT_1_X X_PROBE_OFFSET_FROM_EXTRUDER 
+    #define UBL_PROBE_PT_2_X X_PROBE_OFFSET_FROM_EXTRUDER 
+    #define UBL_PROBE_PT_3_X (X_MAX_POS - Z_RACK_OFFSET) 
+  #endif 
+  // Now the Ys. Absolute value of offset, abs(Y_PROBE_OFFSET_FROM_EXTRUDER) > 20. 
+  #if (Y_PROBE_OFFSET_FROM_EXTRUDER > 0 && Y_PROBE_OFFSET_FROM_EXTRUDER < 20) || (Y_PROBE_OFFSET_FROM_EXTRUDER < 0 && Y_PROBE_OFFSET_FROM_EXTRUDER > -20) 
+    #define UBL_PROBE_PT_1_Y 20 
+    #define UBL_PROBE_PT_2_Y (Y_MAX_POS - 20) 
+    #define UBL_PROBE_PT_3_Y 20 
+  #elif Y_PROBE_OFFSET_FROM_EXTRUDER < 0                         // A large negative offset. 
+    #define UBL_PROBE_PT_1_Y 20 
+    #define UBL_PROBE_PT_2_Y Y_MAX_POS 
+    #define UBL_PROBE_PT_3_Y 20 
+  #else                                                          // A large positive offset. 
+    #define UBL_PROBE_PT_1_Y Y_PROBE_OFFSET_FROM_EXTRUDER 
+    #define UBL_PROBE_PT_2_Y Y_MAX_POS 
+    #define UBL_PROBE_PT_3_Y Y_PROBE_OFFSET_FROM_EXTRUDER 
+  #endif 
 
 #elif ENABLED(MESH_BED_LEVELING)
 
