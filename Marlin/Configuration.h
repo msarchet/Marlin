@@ -865,7 +865,7 @@
 
 // @section machine
 #if ENABLED(Z_RACK_PINION)
-  #define Z_RACK_OFFSET 10
+  #define Z_RACK_OFFSET 12
 #else
   #define Z_RACK_OFFSET 0
 #endif
